@@ -1,6 +1,6 @@
 // import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
-import React from 'react'
+import { StyleSheet, Text, View, ActivityIndicator } from 'react-native';
+import React, { useEffect, useState } from 'react';
 import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import Home from './src/screens/home';
@@ -10,7 +10,8 @@ import Edit from './src/screens/edit';
 import Create from './src/screens/create';
 import { initializeApp } from "firebase/app";
 import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
-import { getFirestore} from 'firebase/firestore';
+import { getFirestore } from 'firebase/firestore';
+
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -37,9 +38,34 @@ const AppTheme = {
 const Stack = createNativeStackNavigator();
 
 export default function App() {
-  const [loading,setLoading] = React.useState(false);
-  const [user,setUser] = React.useState(false);
- 
+  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(null);
+
+  // useEffect(() => {
+  //   signOut(auth)
+  // },[])
+
+  useEffect(() => {
+    const authSubscription = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setUser(user);
+        setLoading(false);
+      }
+      else {
+        setUser(null);
+        setLoading(false);
+      }
+    })
+
+    return authSubscription
+  }, []);
+
+  if (loading) {
+    return <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <ActivityIndicator size="large" color="#00ff00" />
+    </View>
+  }
+
   return (
     <NavigationContainer theme={AppTheme} >
       <Stack.Navigator >
@@ -48,14 +74,13 @@ export default function App() {
             <>
               {/* <Stack.Screen name="Home" component={Home} /> */}
 
-              <Stack.Screen name="Home" options={{headerShown:false}}>
+              <Stack.Screen name="Home" options={{ headerShown: false }}>
                 {(props) => <Home {...props} user={user} />}
               </Stack.Screen>
-              
+
               <Stack.Screen name="Create" >
                 {(props) => <Create {...props} user={user} />}
               </Stack.Screen>
-              <Stack.Screen name="Create" component={Create} />
               <Stack.Screen name="Edit" component={Edit} />
             </>
           ) : (

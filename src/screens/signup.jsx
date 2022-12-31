@@ -1,10 +1,12 @@
 import { View, Text, StyleSheet, Pressable } from 'react-native';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Button from '../components/Button';
 import Input from '../components/Input';
 import { createUserWithEmailAndPassword, onAuthStateChanged, signOut } from 'firebase/auth';
 import { auth, db } from '../../App';
+import { showMessage, hideMessage } from "react-native-flash-message";
+
 
 import {
   addDoc,
@@ -24,29 +26,32 @@ export default function SignUp({ navigation }) {
   const [password, setPassword] = useState('');
   const [age, setAge] = useState('');
   const [name, setName] = useState('');
-  const [loading, setLoading] = useState(false);
+ const [loading, setLoading] = useState(true)
 
   const signUp = async () => {
-    console.log('signUp button clicked');
-
+      setLoading(true);
     try {
       //   // 1 - create a new user with email and password
       const result = await createUserWithEmailAndPassword(auth, email, password);
       console.log("result ==> ", result);
       // 2. add user profile to the database.
-        await addDoc(collection(db, "users"), {
-          name: name,
-          email: email,
-          age: age,
-          gender: gender,
-          uid: result.user.uid
-        });
+      await addDoc(collection(db, "users"), {
+        name: name,
+        email: email,
+        age: age,
+        gender: gender,
+        uid: result.user.uid
+      });
 
-      //   console.log("result--->> ", result);
+      setLoading(false);
     } catch (error) {
-      console.log("error=->", error)
+      console.log("error=->", error);
+      showMessage({
+        message: "Error message",
+        type: "info",
+      });
+    setLoading(false);
     }
-
   }
 
   return (
@@ -56,6 +61,7 @@ export default function SignUp({ navigation }) {
         <Input
           placeholder="Email address"
           onChangeText={(text) => setEmail(text)}
+          autoCapitalize= {"none"}
         />
         <Input
           placeholder="password"
@@ -65,6 +71,7 @@ export default function SignUp({ navigation }) {
         <Input
           placeholder="Full name"
           onChangeText={(text) => setName(text)}
+          autoCapitalize={"words"}
         />
         <Input
           placeholder="Age"
